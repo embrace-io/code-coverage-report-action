@@ -101,3 +101,6 @@ lib/**/*
 .build-dev.npm
 code-coverage-results.md
 dist/artifacts
+
+# IDE related files
+.idea
