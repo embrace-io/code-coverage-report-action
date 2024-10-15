@@ -211,6 +211,7 @@ export async function parseCoverage(
 
         if (instanceOfCobertura(xml)) {
           core.info(`Detected a Cobertura File at ${filename}`)
+          core.info(`Debug test msg`)
           return await parseCobertura(xml)
         } else if (instanceOfClover(xml)) {
           core.info(`Detected a Clover File at ${filename}`)
