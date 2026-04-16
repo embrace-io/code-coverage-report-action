@@ -76,6 +76,15 @@ export async function run(): Promise<void> {
       case 'workflow_dispatch':
         {
           const {GITHUB_REF_NAME = ''} = process.env
+
+          // Download previous artifact before uploading the new one,
+          // so we can generate a day-over-day diff report
+          const previousPath = await downloadArtifacts(GITHUB_REF_NAME)
+          const baseCoverage =
+            previousPath !== null
+              ? await parseCoverage(path.join(previousPath, filename))
+              : null
+
           core.info(`Uploading ${filename}...`)
           await uploadArtifacts([filename], GITHUB_REF_NAME)
           core.debug(
@@ -88,8 +97,16 @@ export async function run(): Promise<void> {
           core.info(`Complete`)
 
           if (headCoverage != null) {
-            core.info(`Generating markdown from ${headCoverage.basePath}...`)
-            await generateMarkdown(headCoverage)
+            if (baseCoverage != null) {
+              core.info(
+                `Generating markdown between ${headCoverage.basePath} and ${baseCoverage.basePath}...`
+              )
+            } else {
+              core.info(
+                `Generating markdown from ${headCoverage.basePath}...`
+              )
+            }
+            await generateMarkdown(headCoverage, baseCoverage)
             core.info(`Complete`)
           }
         }
