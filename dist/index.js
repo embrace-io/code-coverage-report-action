@@ -121873,13 +121873,17 @@ async function downloadArtifacts(name, base = 'artifacts') {
         ? artifactDownloadWorkflowNames
         : [github.context.job];
     const artifactName = formatArtifactName(name);
-    const { GITHUB_BASE_REF = '', GITHUB_REPOSITORY = '' } = process.env;
+    const { GITHUB_REPOSITORY = '' } = process.env;
     const [owner, repo] = GITHUB_REPOSITORY.split('/');
     core.info(`Looking for artifact "${artifactName}" in the following workflows: ${artifactWorkflowNames.join(',')}`);
+    // Search the branch the artifact belongs to. GITHUB_BASE_REF is only set
+    // for pull request events, but this could be triggered on push and scheduled
+    // events as well. Pass the branch name explicitly because an empty branch name
+    // is matched literally by the API and returns no results.
     for await (const runs of client.paginate.iterator(client.rest.actions.listWorkflowRunsForRepo, {
         owner,
         repo,
-        branch: GITHUB_BASE_REF,
+        branch: name,
         status: 'success'
     })) {
         for await (const run of runs.data) {
